@@ -12,6 +12,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordedChunks = [];
     let isRecording = false;
 
+    // Character count update for title
+    const updateTitleCharCount = () => {
+        const titleCount = titleInput.value.length;
+        const titleCharCount = document.getElementById('titleCharCount');
+        if (titleCharCount) {
+            titleCharCount.textContent = `${titleCount}/200`;
+            titleCharCount.className = titleCount > 180 ? 'text-red-500' : titleCount > 160 ? 'text-yellow-500' : 'text-gray-400';
+        }
+    };
+
+    // Character count update for notes
+    const updateNotesCharCount = () => {
+        const notesCount = userNotes.value.length;
+        const notesCharCount = userNotes.parentElement.querySelector('.bg-gray-100');
+        if (notesCharCount) {
+            notesCharCount.textContent = `${notesCount}/1000`;
+            notesCharCount.className = notesCount > 900 ? 'bg-red-100 text-red-600 px-2 py-1 rounded-full' : notesCount > 800 ? 'bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full' : 'bg-gray-100 px-2 py-1 rounded-full';
+        }
+    };
+
+    const titleInput = document.getElementById('title');
+    const userNotes = document.getElementById('userNotes');
+    
     // Character count update
     const updateCharCount = () => {
         const count = textArea.value.length;
@@ -20,7 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     textArea.addEventListener('input', updateCharCount);
+    if (titleInput) titleInput.addEventListener('input', updateTitleCharCount);
+    if (userNotes) userNotes.addEventListener('input', updateNotesCharCount);
     updateCharCount();
+    if (titleInput) updateTitleCharCount();
+    if (userNotes) updateNotesCharCount();
 
     // Voice recording functionality
     recordBtn.addEventListener('click', async () => {
@@ -62,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update UI to show recording is ready
                     recordBtn.textContent = '🎤 Start Recording';
                     recordBtn.className = recordBtn.className.replace('bg-red-100', 'bg-gray-100').replace('text-red-700', 'text-gray-700');
-                    recordingStatus.textContent = 'Recording saved! You can record again or submit your idea.';
+                    recordingStatus.textContent = 'Recording saved! Voice will be transcribed automatically.';
                     recordBtn.disabled = false;
                     isProcessingVoice = false;
                 };
@@ -133,8 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!hasText && hasVoice) {
             // If only voice recording, use a placeholder text
-            data.rawText = '[Voice recording provided - transcribed by AI]';
-            window.gutcheckApp.showToast('Voice recording detected! Analysis will be based on your audio.', 'info');
+            data.rawText = '[Voice recording provided - will be transcribed by AI]';
+            window.gutcheckApp.showToast('Voice recording detected! Your audio will be transcribed and analyzed.', 'info');
         }
 
         // Check if user needs to register

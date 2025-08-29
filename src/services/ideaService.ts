@@ -60,8 +60,12 @@ export class IdeaService {
       // Get user's API key if they have one
       const userApiKey = await this.authService.getUserKey(user);
       
-      // Perform OpenAI analysis
-      const analysisResult = await this.openaiService.analyzeIdea(idea.rawText, userApiKey || undefined, idea.voiceUrl);
+      // Perform OpenAI analysis with user preferences
+      const analysisResult = await this.openaiService.analyzeIdea(idea.rawText, {
+        userApiKey: userApiKey || undefined,
+        preferredModel: user.preferredModel,
+        voiceUrl: idea.voiceUrl
+      });
       
       if (!analysisResult.success || !analysisResult.analysis) {
         return { success: false, error: analysisResult.error || 'Analysis failed' };

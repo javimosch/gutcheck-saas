@@ -107,6 +107,13 @@ app.get('/register', (req, res) => {
   });
 });
 
+app.get('/settings', (req, res) => {
+  res.render('settings', { 
+    title: 'User Settings - GutCheck',
+    page: 'settings'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 

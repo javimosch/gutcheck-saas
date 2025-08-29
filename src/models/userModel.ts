@@ -5,6 +5,7 @@ export interface IUser extends Document {
   ip: string;
   usageCount: number;
   llmKeyEncrypted?: string;
+  preferredModel?: string;
   createdAt: Date;
 }
 
@@ -25,6 +26,10 @@ const userSchema = new Schema<IUser>({
     default: 0
   },
   llmKeyEncrypted: {
+    type: String,
+    required: false
+  },
+  preferredModel: {
     type: String,
     required: false
   },

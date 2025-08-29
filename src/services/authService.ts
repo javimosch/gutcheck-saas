@@ -15,6 +15,11 @@ interface UsageCheckResult {
   error?: string;
 }
 
+interface UpdateSettingsParams {
+  apiKey?: string;
+  preferredModel?: string;
+}
+
 export class AuthService {
   private readonly MAX_FREE_USAGE = 10;
 
@@ -119,5 +124,58 @@ export class AuthService {
 
   decodeEmailFromStorage(encodedEmail: string): string {
     return decodeEmail(encodedEmail);
+  }
+
+  async getUserById(userId: string): Promise<IUser | null> {
+    try {
+      return await User.findById(userId);
+    } catch (error) {
+      console.error('Get user by ID error:', error);
+      return null;
+    }
+  }
+
+  async updateUserSettings(userId: string, params: UpdateSettingsParams): Promise<AuthResult> {
+    try {
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const updateData: Partial<IUser> = {};
+
+      // Update API key if provided
+      if (params.apiKey !== undefined) {
+        if (params.apiKey) {
+          // Encrypt the new API key
+          const encryptionKey = process.env.ENCRYPTION_KEY;
+          if (!encryptionKey) {
+            return { success: false, error: 'Server encryption not configured' };
+          }
+          updateData.llmKeyEncrypted = encryptKey(params.apiKey, encryptionKey);
+        } else {
+          // If empty string is provided, remove the API key
+          updateData.llmKeyEncrypted = undefined;
+        }
+      }
+
+      // Update preferred model if provided
+      if (params.preferredModel !== undefined) {
+        updateData.preferredModel = params.preferredModel || undefined;
+      }
+
+      // Update the user
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true }
+      );
+
+      return { success: true, user: updatedUser || undefined };
+    } catch (error) {
+      console.error('Update user settings error:', error);
+      return { success: false, error: 'Failed to update user settings' };
+    }
   }
 }

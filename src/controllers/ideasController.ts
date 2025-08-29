@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { IdeaService } from '../services/ideaService';
+import { GroqService } from '../services/groqService';
 import { validateIdeaText, validateTitle } from '../utils/validate';
 
 interface AuthenticatedRequest extends Request {
@@ -34,19 +35,52 @@ export class IdeasController {
         return;
       }
 
-      if (hasText) {
-        const textValidation = validateIdeaText(rawText);
+      let finalText = rawText;
+
+      // If voice recording is provided, transcribe it first
+      if (hasVoice) {
+        try {
+          console.debug('🎤 Voice recording detected, starting transcription...');
+          
+          if (!GroqService.isConfigured()) {
+            console.warn('⚠️ Groq API not configured, skipping transcription');
+            finalText = hasText ? rawText : '[Voice recording provided - transcription unavailable]';
+          } else {
+            const transcription = await GroqService.transcribeFromDataURL(voiceUrl);
+            
+            if (transcription.text && transcription.text.trim()) {
+              console.debug('✅ Transcription successful:', transcription.text.substring(0, 100) + '...');
+              
+              // If we have both text and voice, combine them
+              if (hasText && rawText.trim() !== '[Voice recording provided - transcribed by AI]') {
+                finalText = `${rawText}\n\n[Voice Recording Transcription]:\n${transcription.text}`;
+              } else {
+                // Use transcription as the main text
+                finalText = transcription.text;
+              }
+            } else {
+              console.warn('⚠️ Transcription returned empty text');
+              finalText = hasText ? rawText : '[Voice recording provided - transcription failed]';
+            }
+          }
+        } catch (error) {
+          console.error('❌ Transcription error:', error);
+          // Fall back to existing text or placeholder
+          finalText = hasText ? rawText : '[Voice recording provided - transcription failed]';
+        }
+      }
+
+      // Validate final text
+      if (finalText && finalText.trim() && !finalText.includes('[Voice recording provided')) {
+        const textValidation = validateIdeaText(finalText);
         if (!textValidation.valid) {
           res.status(400).json({ error: textValidation.error });
           return;
         }
       }
 
-      // Use placeholder text if only voice recording provided
-      const finalText = hasText ? rawText : '[Voice recording provided - transcribed by AI]';
-
       const result = await this.ideaService.createIdea(
-        { title, rawText: finalText, voiceUrl, userNotes },
+        { title, rawText: finalText, voiceUrl: '', userNotes }, // Clear voiceUrl since we've transcribed it
         user
       );
 

@@ -9,6 +9,12 @@ interface AnalysisResult {
   error?: string;
 }
 
+interface AnalysisOptions {
+  userApiKey?: string;
+  preferredModel?: string;
+  voiceUrl?: string;
+}
+
 export class OpenAIService {
   private client: OpenAI | null = null;
   private promptTemplate: string;
@@ -41,23 +47,24 @@ export class OpenAIService {
     });
   }
 
-  async analyzeIdea(ideaText: string, userApiKey?: string, voiceUrl?: string): Promise<AnalysisResult> {
+  async analyzeIdea(ideaText: string, options?: AnalysisOptions): Promise<AnalysisResult> {
     try {
-      this.initializeClient(userApiKey);
+      this.initializeClient(options?.userApiKey);
       
       if (!this.client) {
         return { success: false, error: 'OpenAI client not initialized' };
       }
 
       const prompt = this.promptTemplate.replace('{ideaText}', ideaText);
-      const modelName = process.env.OPENAI_MODEL_NAME || 'gpt-3.5-turbo';
+      // Use user's preferred model if available, otherwise use default
+      const modelName = options?.userApiKey&&options?.preferredModel?options?.preferredModel: (process.env.OPENAI_MODEL_NAME || 'gpt-3.5-turbo');
 
       // Prepare messages based on whether we have voice recording
       let messages: any[];
 
-      if (voiceUrl && voiceUrl.startsWith('data:audio/')) {
+      if (options?.voiceUrl && options.voiceUrl.startsWith('data:audio/')) {
         // Extract base64 audio data from data URL
-        const base64Data = voiceUrl.split(',')[1];
+        const base64Data = options.voiceUrl.split(',')[1];
         
         messages = [
           {

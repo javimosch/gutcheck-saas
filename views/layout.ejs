@@ -5,29 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3B82F6">
     <title><%= title || 'GutCheck' %></title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="GutCheck">
-    
+
     <!-- Icons -->
     <link rel="icon" href="/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
-    
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors; }
-        .btn-secondary { @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors; }
-        .input-field { @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none; }
-        .card { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6; }
-        .loading { @apply opacity-50 pointer-events-none; }
-    </style>
+
+        <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
@@ -40,9 +33,18 @@
                     </div>
                     <span class="font-bold text-xl text-gray-900">GutCheck</span>
                 </a>
-                
+
                 <div class="flex items-center space-x-4">
                     <a href="/ideas" class="text-gray-600 hover:text-gray-900 font-medium">My Ideas</a>
+                    <a href="/settings" class="text-gray-600 hover:text-gray-900 font-medium">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Settings
+                        </div>
+                    </a>
                     <div class="usage-indicator hidden" id="usageIndicator">
                         <span class="text-sm text-gray-500">Uses: <span id="usageCount">0</span>/10</span>
                     </div>
@@ -80,12 +82,12 @@
 
     <!-- JavaScript -->
     <script src="/js/app.js"></script>
-    
+
     <!-- Page-specific initialization -->
     <% if (typeof ideaId !== 'undefined') { %>
         <script>const ideaId = '<%= ideaId %>';</script>
     <% } %>
-    
+
     <!-- Page-specific scripts -->
     <% if (typeof page !== 'undefined' && page) { %>
         <script src="/js/<%= page %>.js"></script>

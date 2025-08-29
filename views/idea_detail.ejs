@@ -22,7 +22,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Idea Not Found</h3>
         <p class="text-gray-600 mb-4">The idea you're looking for doesn't exist or you don't have access to it.</p>
-        <a href="/ideas" class="btn-primary">Back to Ideas</a>
+        <a href="/ideas" class="btn btn-primary">Back to Ideas</a>
     </div>
 
     <!-- Idea Content -->
@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 <div class="flex space-x-2 ml-4">
-                    <button id="reanalyzeBtn" class="btn-secondary text-sm hidden">
+                    <button id="reanalyzeBtn" class="btn btn-secondary text-sm hidden">
                         🔄 Re-analyze
                     </button>
                     <button id="archiveBtn" class="text-sm text-gray-500 hover:text-red-600">
@@ -55,14 +55,14 @@
             <div id="userNotesSection" class="mt-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">My Notes</h3>
                 <div class="space-y-3">
-                    <textarea 
-                        id="userNotes" 
-                        rows="3" 
+                    <textarea
+                        id="userNotes"
+                        rows="3"
                         maxlength="1000"
-                        class="input-field resize-none" 
+                        class="input-field resize-none"
                         placeholder="Add your thoughts, next steps, or additional notes..."
                     ></textarea>
-                    <button id="saveNotesBtn" class="btn-secondary text-sm">
+                    <button id="saveNotesBtn" class="btn btn-secondary text-sm">
                         Save Notes
                     </button>
                 </div>
@@ -159,25 +159,11 @@
             </div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Analysis Pending</h3>
             <p class="text-gray-600 mb-4">This idea hasn't been analyzed yet.</p>
-            <button id="startAnalysisBtn" class="btn-primary">
+            <button id="startAnalysisBtn" class="btn btn-primary">
                 🔍 Start Analysis
             </button>
         </div>
     </div>
 </div>
-
-<style>
-.score-high {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.score-medium {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.score-low {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-</style>
 
 <!-- ideaId will be set in the layout before page script loads -->
