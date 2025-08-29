@@ -1,0 +1,183 @@
+<div class="max-w-4xl mx-auto">
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="/ideas" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back to Ideas
+        </a>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading idea details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden text-center py-12">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">⚠️</span>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Idea Not Found</h3>
+        <p class="text-gray-600 mb-4">The idea you're looking for doesn't exist or you don't have access to it.</p>
+        <a href="/ideas" class="btn-primary">Back to Ideas</a>
+    </div>
+
+    <!-- Idea Content -->
+    <div id="ideaContent" class="hidden space-y-8">
+        <!-- Header -->
+        <div class="card">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1 min-w-0">
+                    <h1 id="ideaTitle" class="text-3xl font-bold text-gray-900 mb-2"></h1>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span id="ideaDate"></span>
+                        <span id="ideaStatus" class="status-badge"></span>
+                    </div>
+                </div>
+                <div class="flex space-x-2 ml-4">
+                    <button id="reanalyzeBtn" class="btn-secondary text-sm hidden">
+                        🔄 Re-analyze
+                    </button>
+                    <button id="archiveBtn" class="text-sm text-gray-500 hover:text-red-600">
+                        Archive
+                    </button>
+                </div>
+            </div>
+
+            <div class="prose max-w-none">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Original Idea</h3>
+                <p id="ideaText" class="text-gray-700 whitespace-pre-wrap"></p>
+            </div>
+
+            <div id="userNotesSection" class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">My Notes</h3>
+                <div class="space-y-3">
+                    <textarea 
+                        id="userNotes" 
+                        rows="3" 
+                        maxlength="1000"
+                        class="input-field resize-none" 
+                        placeholder="Add your thoughts, next steps, or additional notes..."
+                    ></textarea>
+                    <button id="saveNotesBtn" class="btn-secondary text-sm">
+                        Save Notes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Results -->
+        <div id="analysisSection" class="hidden">
+            <!-- Overall Score -->
+            <div class="card">
+                <div class="text-center">
+                    <div id="scoreCircle" class="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+                        <span id="scoreValue"></span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Viability Score</h2>
+                    <p id="recommendationText" class="text-lg font-medium mb-4"></p>
+                    <span id="recommendationBadge" class="recommendation-badge text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Analysis Breakdown -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Problem -->
+                <div class="card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">🎯</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 mb-2">Problem Identified</h3>
+                            <p id="problemText" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target Audience -->
+                <div class="card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">👥</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 mb-2">Target Audience</h3>
+                            <p id="audienceText" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Potential -->
+                <div class="card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">📈</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 mb-2">Market Potential</h3>
+                            <p id="potentialText" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Competitors -->
+                <div class="card">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">⚔️</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 mb-2">Competitive Landscape</h3>
+                            <div id="competitorsList" class="space-y-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full AI Response (Collapsible) -->
+            <div class="card">
+                <button id="toggleRawResponse" class="w-full text-left flex items-center justify-between py-2">
+                    <h3 class="font-semibold text-gray-900">View Full AI Analysis</h3>
+                    <svg id="chevron" class="w-5 h-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="rawResponse" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                    <pre id="rawResponseContent" class="text-sm text-gray-700 whitespace-pre-wrap"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Analysis State -->
+        <div id="pendingState" class="hidden text-center py-12">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl">⏳</span>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Analysis Pending</h3>
+            <p class="text-gray-600 mb-4">This idea hasn't been analyzed yet.</p>
+            <button id="startAnalysisBtn" class="btn-primary">
+                🔍 Start Analysis
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.score-high {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.score-medium {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.score-low {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+</style>
+
+<!-- ideaId will be set in the layout before page script loads -->

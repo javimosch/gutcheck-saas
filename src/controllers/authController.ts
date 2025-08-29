@@ -1,0 +1,89 @@
+import { Request, Response } from 'express';
+import { AuthService } from '../services/authService';
+import { isValidEmail } from '../utils/validate';
+
+interface RegisterRequest extends Request {
+  body: {
+    email: string;
+    byokKey?: string;
+  };
+}
+
+export class AuthController {
+  private authService: AuthService;
+
+  constructor() {
+    this.authService = new AuthService();
+  }
+
+  register = async (req: RegisterRequest, res: Response): Promise<void> => {
+    try {
+      const { email, byokKey } = req.body;
+      const ip = req.ip || req.connection.remoteAddress || 'unknown';
+
+      if (!email || !isValidEmail(email)) {
+        res.status(400).json({ error: 'Valid email is required' });
+        return;
+      }
+
+      const result = await this.authService.findOrCreateUser(email, ip, byokKey);
+
+      if (!result.success) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+
+      const encodedEmail = this.authService.encodeEmailForStorage(email);
+
+      res.status(201).json({
+        success: true,
+        user: {
+          email: encodedEmail,
+          usageCount: result.user?.usageCount || 0,
+          hasCustomKey: !!result.user?.llmKeyEncrypted
+        }
+      });
+    } catch (error) {
+      console.error('Register controller error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  checkAuth = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+      const ip = req.ip || req.connection.remoteAddress || 'unknown';
+
+      if (!email) {
+        res.status(400).json({ error: 'Email is required' });
+        return;
+      }
+
+      let decodedEmail: string;
+      try {
+        decodedEmail = this.authService.decodeEmailFromStorage(email);
+      } catch {
+        decodedEmail = email;
+      }
+
+      if (!isValidEmail(decodedEmail)) {
+        res.status(400).json({ error: 'Invalid email format' });
+        return;
+      }
+
+      const usageCheck = await this.authService.checkUsageLimit(decodedEmail, ip);
+
+      res.json({
+        success: true,
+        allowed: usageCheck.allowed,
+        usageCount: usageCheck.usageCount,
+        maxUsage: 10,
+        hasCustomKey: !!usageCheck.user?.llmKeyEncrypted,
+        error: usageCheck.error
+      });
+    } catch (error) {
+      console.error('Check auth controller error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+}

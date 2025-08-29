@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3B82F6">
+    <title><%= title || 'GutCheck' %></title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="GutCheck">
+    
+    <!-- Icons -->
+    <link rel="icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors; }
+        .btn-secondary { @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors; }
+        .input-field { @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none; }
+        .card { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6; }
+        .loading { @apply opacity-50 pointer-events-none; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">G</span>
+                    </div>
+                    <span class="font-bold text-xl text-gray-900">GutCheck</span>
+                </a>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/ideas" class="text-gray-600 hover:text-gray-900 font-medium">My Ideas</a>
+                    <div class="usage-indicator hidden" id="usageIndicator">
+                        <span class="text-sm text-gray-500">Uses: <span id="usageCount">0</span>/10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <%- body %>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="text-gray-700">Analyzing your idea...</span>
+        </div>
+    </div>
+
+    <!-- Install PWA Prompt -->
+    <div id="installPrompt" class="fixed bottom-4 left-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg hidden">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="font-medium">Install GutCheck</p>
+                <p class="text-sm text-blue-100">Add to your home screen for quick access</p>
+            </div>
+            <div class="flex space-x-2">
+                <button id="installApp" class="bg-white text-blue-600 px-3 py-1 rounded font-medium text-sm">Install</button>
+                <button id="dismissInstall" class="text-blue-100 hover:text-white text-sm">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/js/app.js"></script>
+    
+    <!-- Page-specific initialization -->
+    <% if (typeof ideaId !== 'undefined') { %>
+        <script>const ideaId = '<%= ideaId %>';</script>
+    <% } %>
+    
+    <!-- Page-specific scripts -->
+    <% if (typeof page !== 'undefined' && page) { %>
+        <script src="/js/<%= page %>.js"></script>
+    <% } %>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>

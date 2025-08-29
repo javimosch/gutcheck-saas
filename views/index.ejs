@@ -1,0 +1,139 @@
+<div class="max-w-2xl mx-auto">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            Get Your SaaS Idea <span class="text-blue-600">Gut-Checked</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-8">
+            Submit your SaaS idea and get instant AI-powered analysis on market potential, competition, and viability.
+        </p>
+    </div>
+
+    <!-- Idea Submission Form -->
+    <div class="card mb-8">
+        <form id="ideaForm" class="space-y-6">
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                    Idea Title *
+                </label>
+                <input 
+                    type="text" 
+                    id="title" 
+                    name="title" 
+                    required 
+                    maxlength="200"
+                    class="input-field" 
+                    placeholder="e.g., AI-powered project management for remote teams"
+                >
+            </div>
+
+            <div>
+                <label for="rawText" class="block text-sm font-medium text-gray-700 mb-2">
+                    Describe Your Idea <span id="textRequiredIndicator">*</span>
+                </label>
+                <textarea 
+                    id="rawText" 
+                    name="rawText" 
+                    rows="6" 
+                    maxlength="5000"
+                    class="input-field resize-none" 
+                    placeholder="Describe the problem you're solving, your target audience, and how your solution works. Be as detailed as possible - this helps our AI provide better analysis."
+                ></textarea>
+                <div class="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>Be specific about the problem and solution</span>
+                    <span id="charCount">0/5000</span>
+                </div>
+            </div>
+
+            <!-- Voice Upload (Optional) -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div class="text-center">
+                    <div class="mb-2">
+                        <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">Record your idea (optional)</p>
+                    <button 
+                        type="button" 
+                        id="recordBtn" 
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        🎤 Start Recording
+                    </button>
+                    <div id="recordingStatus" class="mt-2 text-sm text-gray-500 hidden"></div>
+                </div>
+            </div>
+
+            <div>
+                <label for="userNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Notes (optional)
+                </label>
+                <textarea 
+                    id="userNotes" 
+                    name="userNotes" 
+                    rows="3" 
+                    maxlength="1000"
+                    class="input-field resize-none" 
+                    placeholder="Any specific questions or areas you'd like us to focus on?"
+                ></textarea>
+            </div>
+
+            <!-- Hidden input for voice recording data -->
+            <input type="hidden" id="voiceUrl" name="voiceUrl" value="">
+            
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button 
+                    type="submit" 
+                    class="btn-primary flex-1 flex items-center justify-center"
+                    id="submitBtn"
+                >
+                    <span>🔍 Analyze My Idea</span>
+                </button>
+                
+                <button 
+                    type="button" 
+                    class="btn-secondary sm:w-auto"
+                    onclick="document.getElementById('ideaForm').reset(); updateCharCount();"
+                >
+                    Clear Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Features -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="text-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl">⚡</span>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Instant Analysis</h3>
+            <p class="text-sm text-gray-600">Get comprehensive market analysis in seconds using advanced AI.</p>
+        </div>
+        
+        <div class="text-center">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl">🎯</span>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Market Insights</h3>
+            <p class="text-sm text-gray-600">Understand your target audience and competitive landscape.</p>
+        </div>
+        
+        <div class="text-center">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl">📊</span>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Scored Recommendations</h3>
+            <p class="text-sm text-gray-600">Get actionable recommendations with confidence scores.</p>
+        </div>
+    </div>
+
+    <!-- Usage Info -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+        <p class="text-sm text-blue-800">
+            <strong>Free:</strong> 10 idea analyses per device. 
+            <a href="/register" class="underline hover:text-blue-900">Register</a> or provide your OpenRouter key for unlimited use.
+        </p>
+    </div>
+</div>
