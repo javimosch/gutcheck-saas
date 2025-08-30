@@ -168,6 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.gutcheckApp.userEmail) {
             const shouldRegister = confirm('You need to register to submit ideas. Would you like to register now?');
             if (shouldRegister) {
+                // Store the idea data for after registration
+                const pendingIdea = {
+                    title: data.title,
+                    rawText: data.rawText,
+                    voiceUrl: data.voiceUrl,
+                    userNotes: data.userNotes,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('gutcheck_pending_idea', JSON.stringify(pendingIdea));
+
                 window.location.href = '/register';
                 return;
             } else {
@@ -216,4 +226,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Make updateCharCount globally accessible
     window.updateCharCount = updateCharCount;
+
+    // Check for pending idea data and restore it
+    const pendingIdea = localStorage.getItem('gutcheck_pending_idea');
+    if (pendingIdea) {
+        try {
+            const ideaData = JSON.parse(pendingIdea);
+
+            // Check if the idea is not too old (within last hour)
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            if (ideaData.timestamp > oneHourAgo) {
+                // Restore the form data
+                const titleInput = document.getElementById('title');
+                const rawTextInput = document.getElementById('rawText');
+                const userNotesInput = document.getElementById('userNotes');
+
+                if (titleInput && ideaData.title) {
+                    titleInput.value = ideaData.title;
+                }
+                if (rawTextInput && ideaData.rawText) {
+                    rawTextInput.value = ideaData.rawText;
+                }
+                if (userNotesInput && ideaData.userNotes) {
+                    userNotesInput.value = ideaData.userNotes;
+                }
+
+                // Update character counts
+                if (titleInput) updateTitleCharCount();
+                if (rawTextInput) updateCharCount();
+                if (userNotesInput) updateNotesCharCount();
+
+                window.gutcheckApp.showToast('Your previous idea has been restored!', 'info');
+            } else {
+                // Clear old pending idea
+                localStorage.removeItem('gutcheck_pending_idea');
+            }
+        } catch (error) {
+            console.error('Error restoring pending idea:', error);
+            localStorage.removeItem('gutcheck_pending_idea');
+        }
+    }
 });

@@ -57,18 +57,76 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 // Store encoded email in localStorage
                 localStorage.setItem('gutcheck_user_email', result.user.email);
-                
+
                 window.gutcheckApp.showToast('Registration successful!', 'success');
-                
+
                 // Update app state
                 window.gutcheckApp.userEmail = result.user.email;
                 window.gutcheckApp.hasCustomKey = result.user.hasCustomKey;
-                
-                // Redirect to home page
+
+                // Check if there's a pending idea to submit
+                const pendingIdea = localStorage.getItem('gutcheck_pending_idea');
+                if (pendingIdea) {
+                    try {
+                        const ideaData = JSON.parse(pendingIdea);
+
+                        // Check if the idea is not too old (within last hour)
+                        const oneHourAgo = Date.now() - (60 * 60 * 1000);
+                        if (ideaData.timestamp > oneHourAgo) {
+                            window.gutcheckApp.showToast('Submitting your idea...', 'info');
+
+                            // Auto-submit the pending idea
+                            setTimeout(async () => {
+                                try {
+                                    const response = await fetch('/api/ideas', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'x-user-email': result.user.email
+                                        },
+                                        body: JSON.stringify({
+                                            title: ideaData.title,
+                                            rawText: ideaData.rawText,
+                                            voiceUrl: ideaData.voiceUrl,
+                                            userNotes: ideaData.userNotes
+                                        })
+                                    });
+
+                                    const submitResult = await response.json();
+
+                                    if (submitResult.success) {
+                                        window.gutcheckApp.showToast('Your idea has been analyzed!', 'success');
+                                        // Clear the pending idea
+                                        localStorage.removeItem('gutcheck_pending_idea');
+                                        // Redirect to the idea detail page
+                                        window.location.href = `/ideas/${submitResult.idea._id}`;
+                                    } else {
+                                        // If submission failed, redirect to home and let user try again
+                                        window.gutcheckApp.showToast('Idea submission failed. Please try again.', 'error');
+                                        window.location.href = '/';
+                                    }
+                                } catch (error) {
+                                    console.error('Auto-submit error:', error);
+                                    window.gutcheckApp.showToast('Failed to submit your idea. Please try again.', 'error');
+                                    window.location.href = '/';
+                                }
+                            }, 1000); // Wait 1 second before auto-submitting
+                            return; // Don't redirect to home yet
+                        } else {
+                            // Clear old pending idea
+                            localStorage.removeItem('gutcheck_pending_idea');
+                        }
+                    } catch (error) {
+                        console.error('Error parsing pending idea:', error);
+                        localStorage.removeItem('gutcheck_pending_idea');
+                    }
+                }
+
+                // Redirect to home page if no pending idea
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 1500);
-                
+
             } else {
                 throw new Error(result.error || 'Registration failed');
             }
