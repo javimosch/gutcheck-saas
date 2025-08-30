@@ -5,16 +5,40 @@ document.addEventListener('DOMContentLoaded', function() {
   const toggleApiKeyBtn = document.getElementById('toggle-api-key');
   const removeApiKeyBtn = document.getElementById('remove-api-key');
   const apiKeyStatus = document.getElementById('api-key-status');
+  const groqKeyForm = document.getElementById('groq-key-form');
+  const groqKeyInput = document.getElementById('groq-key');
+  const toggleGroqKeyBtn = document.getElementById('toggle-groq-key');
+  const removeGroqKeyBtn = document.getElementById('remove-groq-key');
+  const groqKeyStatus = document.getElementById('groq-key-status');
   const modelPreferencesForm = document.getElementById('model-preferences-form');
   const preferredModelSelect = document.getElementById('preferred-model');
 
   // Toggle API key visibility
-  toggleApiKeyBtn.addEventListener('click', function() {
+  toggleApiKeyBtn?.addEventListener('click', function() {
     const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
     apiKeyInput.setAttribute('type', type);
     
     // Update icon based on visibility state
     const eyeIcon = toggleApiKeyBtn.querySelector('svg');
+    if (type === 'text') {
+      eyeIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+      `;
+    } else {
+      eyeIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      `;
+    }
+  });
+
+  // Toggle Groq API key visibility
+  toggleGroqKeyBtn?.addEventListener('click', function() {
+    const type = groqKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    groqKeyInput.setAttribute('type', type);
+    
+    // Update icon based on visibility state
+    const eyeIcon = toggleGroqKeyBtn.querySelector('svg');
     if (type === 'text') {
       eyeIcon.innerHTML = `
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -60,6 +84,34 @@ document.addEventListener('DOMContentLoaded', function() {
         apiKeyStatus.className = 'ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
       }
 
+      // Update Groq API key status
+      if (groqKeyStatus) {
+        if (data.hasGroqApiKey) {
+          groqKeyStatus.textContent = 'Groq Key Set';
+          groqKeyStatus.className = 'ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+          if (groqKeyInput) groqKeyInput.placeholder = '••••••••••••••••••••••••••';
+        } else {
+          groqKeyStatus.textContent = 'No Groq Key';
+          groqKeyStatus.className = 'ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
+        }
+      }
+
+      // Update Groq usage indicator
+      const groqUsageInfo = document.getElementById('groq-usage-info');
+      if (groqUsageInfo) {
+        const groqUsageCount = data.groqUsageCount || 0;
+        const maxGroqUsage = data.maxGroqUsage || 10;
+        groqUsageInfo.textContent = `Voice transcriptions used: ${groqUsageCount}/${maxGroqUsage}`;
+        
+        if (groqUsageCount >= maxGroqUsage) {
+          groqUsageInfo.className = 'text-sm text-red-600 mt-1';
+        } else if (groqUsageCount >= maxGroqUsage * 0.8) {
+          groqUsageInfo.className = 'text-sm text-yellow-600 mt-1';
+        } else {
+          groqUsageInfo.className = 'text-sm text-gray-600 mt-1';
+        }
+      }
+
       // Set preferred model if available
       if (data.preferredModel) {
         preferredModelSelect.value = data.preferredModel;
@@ -80,8 +132,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Save Groq API key
+  groqKeyForm?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const groqApiKey = groqKeyInput.value.trim();
+    const userEmail = localStorage.getItem('gutcheck_user_email');
+    
+    if (!userEmail) {
+      showNotification('Please log in to save settings', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/auth/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail
+        },
+        body: JSON.stringify({ groqApiKey })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save Groq API key');
+      }
+
+      // Clear input for security
+      groqKeyInput.value = '';
+      
+      showNotification('Groq API key saved successfully', 'success');
+      
+      // Reload settings to update UI
+      loadUserSettings();
+      
+    } catch (error) {
+      console.error('Error saving Groq API key:', error);
+      showNotification(error.message, 'error');
+    }
+  });
+
+  // Remove Groq API key
+  removeGroqKeyBtn?.addEventListener('click', async function() {
+    if (!confirm('Are you sure you want to remove your Groq API key?')) {
+      return;
+    }
+    
+    const userEmail = localStorage.getItem('gutcheck_user_email');
+    if (!userEmail) {
+      showNotification('Please log in to remove settings', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/auth/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail
+        },
+        body: JSON.stringify({ groqApiKey: '' })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove Groq API key');
+      }
+
+      showNotification('Groq API key removed successfully', 'success');
+      
+      // Reload settings to update UI
+      loadUserSettings();
+      
+    } catch (error) {
+      console.error('Error removing Groq API key:', error);
+      showNotification(error.message, 'error');
+    }
+  });
+
   // Save API key
-  apiKeyForm.addEventListener('submit', async function(e) {
+  apiKeyForm?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const apiKey = apiKeyInput.value.trim();

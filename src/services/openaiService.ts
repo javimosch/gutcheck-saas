@@ -129,12 +129,62 @@ export class OpenAIService {
 
   private parseAnalysisResponse(content: string, rawResponse: any): IAnalysis | null {
     try {
-      // Clean the content to extract JSON
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : content;
-      
-      const parsed = JSON.parse(jsonStr);
-      
+      console.log('Raw OpenAI response content:', content.substring(0, 500));
+
+      let jsonStr = content.trim();
+
+      // Try to extract JSON from various formats
+      const jsonPatterns = [
+        // Look for JSON object between curly braces (most common)
+        /\{[\s\S]*\}/,
+        // Look for JSON after markdown code blocks
+        /```(?:json)?\s*(\{[\s\S]*?\})\s*```/i,
+        // Look for JSON after common prefixes
+        /(?:json|response|analysis)[\s\S]*?(\{[\s\S]*\})/i,
+        // Look for JSON at the end of the response
+        /(\{[^{}]*\{[^{}]*\}[^{}]*\}|\{[^{}]*\})/
+      ];
+
+      for (const pattern of jsonPatterns) {
+        const match = content.match(pattern);
+        if (match) {
+          jsonStr = match[1] || match[0];
+          console.log('Found JSON pattern match:', jsonStr.substring(0, 200));
+          break;
+        }
+      }
+
+      // Clean up the JSON string
+      jsonStr = jsonStr
+        .replace(/^[^{]*/, '') // Remove anything before the first {
+        .replace(/[^}]*$/, '') // Remove anything after the last }
+        .replace(/```/g, '') // Remove markdown code blocks
+        .replace(/^\s*json\s*/i, '') // Remove "json" prefix
+        .trim();
+
+      console.log('Cleaned JSON string:', jsonStr.substring(0, 200));
+
+      // Try to parse the JSON
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Failed to parse:', jsonStr);
+
+        // Try to fix common JSON issues
+        jsonStr = jsonStr
+          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":') // Add quotes to unquoted keys
+          .replace(/:\s*([^",\[\]{}\n]+)([,}])/g, ': "$1"$2') // Add quotes to unquoted string values
+          .replace(/,\s*}/g, '}') // Remove trailing commas
+          .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+
+        console.log('Attempting to fix JSON:', jsonStr.substring(0, 200));
+        parsed = JSON.parse(jsonStr);
+      }
+
+      console.log('Successfully parsed JSON:', parsed);
+
       // Validate required fields
       if (!this.isValidAnalysis(parsed)) {
         console.error('Invalid analysis structure:', parsed);
@@ -144,7 +194,7 @@ export class OpenAIService {
       return {
         problem: String(parsed.problem || '').trim(),
         audience: String(parsed.audience || '').trim(),
-        competitors: Array.isArray(parsed.competitors) 
+        competitors: Array.isArray(parsed.competitors)
           ? parsed.competitors.map((c: any) => String(c).trim())
           : [],
         potential: String(parsed.potential || '').trim(),
@@ -154,6 +204,7 @@ export class OpenAIService {
       };
     } catch (error) {
       console.error('Failed to parse analysis response:', error);
+      console.error('Original content:', content.substring(0, 1000));
       return null;
     }
   }

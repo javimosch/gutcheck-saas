@@ -4,7 +4,9 @@ export interface IUser extends Document {
   email: string;
   ip: string;
   usageCount: number;
+  groqUsageCount: number;
   llmKeyEncrypted?: string;
+  groqKeyEncrypted?: string;
   preferredModel?: string;
   createdAt: Date;
 }
@@ -25,7 +27,15 @@ const userSchema = new Schema<IUser>({
     type: Number,
     default: 0
   },
+  groqUsageCount: {
+    type: Number,
+    default: 0
+  },
   llmKeyEncrypted: {
+    type: String,
+    required: false
+  },
+  groqKeyEncrypted: {
     type: String,
     required: false
   },

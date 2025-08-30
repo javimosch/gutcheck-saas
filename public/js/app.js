@@ -31,7 +31,9 @@ class GutCheckApp {
                 const data = await response.json();
                 if (data.success) {
                     this.updateUsageIndicator(data.usageCount, data.maxUsage);
+                    this.updateGroqUsageIndicator(data.groqUsageCount, data.maxGroqUsage);
                     this.hasCustomKey = data.hasCustomKey;
+                    this.hasGroqKey = data.hasGroqKey;
                 }
             } catch (error) {
                 console.debug('Failed to load user data:', error);
@@ -56,6 +58,107 @@ class GutCheckApp {
                 indicator.className = indicator.className.replace(/text-\w+-\d+/, 'text-gray-500');
             }
         }
+    }
+
+    updateGroqUsageIndicator(groqUsageCount = 0, maxGroqUsage = 10) {
+        const indicator = document.getElementById('groqUsageIndicator');
+        const countElement = document.getElementById('groqUsageCount');
+        
+        if (indicator && countElement) {
+            countElement.textContent = groqUsageCount;
+            indicator.classList.remove('hidden');
+            
+            // Color code based on usage
+            if (groqUsageCount >= maxGroqUsage) {
+                indicator.className = indicator.className.replace(/text-\w+-\d+/, 'text-red-500');
+            } else if (groqUsageCount >= maxGroqUsage * 0.8) {
+                indicator.className = indicator.className.replace(/text-\w+-\d+/, 'text-yellow-500');
+            } else {
+                indicator.className = indicator.className.replace(/text-\w+-\d+/, 'text-gray-500');
+            }
+        }
+    }
+
+    // Helper method to show Groq API key prompt
+    showGroqKeyPrompt() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+        modal.innerHTML = `
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Voice Transcription Limit Reached</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">
+                            You've used all 10 free voice transcriptions. To continue using voice features, please provide your own Groq API key.
+                        </p>
+                        <div class="mt-4">
+                            <input type="text" id="groqApiKeyInput" placeholder="Enter your Groq API key" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mt-3 text-xs text-gray-500">
+                            <a href="https://console.groq.com/keys" target="_blank" class="text-blue-600 hover:underline">
+                                Get your Groq API key here
+                            </a>
+                        </div>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="saveGroqKey" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            Save API Key
+                        </button>
+                        <button id="skipGroqKey" class="mt-2 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Skip for Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Handle save button
+        document.getElementById('saveGroqKey').addEventListener('click', async () => {
+            const groqApiKey = document.getElementById('groqApiKeyInput').value.trim();
+            if (!groqApiKey) {
+                this.showToast('Please enter a valid Groq API key', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-email': this.userEmail
+                    },
+                    body: JSON.stringify({ groqApiKey })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save Groq API key');
+                }
+
+                this.hasGroqKey = true;
+                this.showToast('Groq API key saved successfully!', 'success');
+                document.body.removeChild(modal);
+                
+                // Reload user data to update usage indicators
+                this.loadUserData();
+            } catch (error) {
+                this.showToast('Failed to save Groq API key', 'error');
+            }
+        });
+
+        // Handle skip button
+        document.getElementById('skipGroqKey').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        // Handle click outside modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
     }
 
     // PWA functionality

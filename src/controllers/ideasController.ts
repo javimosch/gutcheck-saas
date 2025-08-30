@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { IdeaService } from '../services/ideaService';
 import { GroqService } from '../services/groqService';
+import { AuthService } from '../services/authService';
 import { validateIdeaText, validateTitle } from '../utils/validate';
 
 interface AuthenticatedRequest extends Request {
@@ -9,9 +10,11 @@ interface AuthenticatedRequest extends Request {
 
 export class IdeasController {
   private ideaService: IdeaService;
+  private authService: AuthService;
 
   constructor() {
     this.ideaService = new IdeaService();
+    this.authService = new AuthService();
   }
 
   createIdea = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -42,11 +45,31 @@ export class IdeasController {
         try {
           console.debug('🎤 Voice recording detected, starting transcription...');
           
-          if (!GroqService.isConfigured()) {
+          // Check Groq usage limit
+          const groqUsageCheck = await this.authService.checkGroqUsageLimit(user.email, req.ip || req.connection.remoteAddress || "unknown");
+          
+          if (!groqUsageCheck.allowed) {
+            res.status(403).json({ 
+              error: groqUsageCheck.error,
+              groqUsageCount: groqUsageCheck.groqUsageCount,
+              needsGroqKey: true
+            });
+            return;
+          }
+          
+          // Get user's Groq API key if available
+          const userGroqKey = await this.authService.getGroqKey(groqUsageCheck.user!);
+          
+          if (!GroqService.isConfigured() && !userGroqKey) {
             console.warn('⚠️ Groq API not configured, skipping transcription');
             finalText = hasText ? rawText : '[Voice recording provided - transcription unavailable]';
           } else {
-            const transcription = await GroqService.transcribeFromDataURL(voiceUrl);
+            const transcription = await GroqService.transcribeFromDataURL(voiceUrl, userGroqKey || undefined);
+            
+            // Increment Groq usage only if using system API key
+            if (!userGroqKey) {
+              await this.authService.incrementGroqUsage(groqUsageCheck.user!._id);
+            }
             
             if (transcription.text && transcription.text.trim()) {
               console.debug('✅ Transcription successful:', transcription.text.substring(0, 100) + '...');

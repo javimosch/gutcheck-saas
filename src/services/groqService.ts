@@ -3,10 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
-
 // Define the structure we expect from Groq's transcription response
 interface GroqTranscriptionResponse {
     text: string;
@@ -23,9 +19,20 @@ export interface TranscriptionResult {
 
 export class GroqService {
     /**
+     * Create Groq client instance with either user API key or system API key
+     */
+    private static createGroqClient(userApiKey?: string): Groq {
+        const apiKey = userApiKey || process.env.GROQ_API_KEY;
+        if (!apiKey) {
+            throw new Error('No Groq API key available');
+        }
+        return new Groq({ apiKey });
+    }
+
+    /**
      * Transcribe audio using Groq Whisper
      */
-    static async transcribeAudio(audioBuffer: Buffer, filename: string = 'audio.webm'): Promise<TranscriptionResult> {
+    static async transcribeAudio(audioBuffer: Buffer, filename: string = 'audio.webm', userApiKey?: string): Promise<TranscriptionResult> {
         try {
             // Create a temporary file from the buffer
             const tempDir = path.join(process.cwd(), 'temp');
@@ -38,6 +45,7 @@ export class GroqService {
 
             console.debug('🎤 Starting Groq Whisper transcription...');
             
+            const groq = this.createGroqClient(userApiKey);
             const transcription = await groq.audio.transcriptions.create({
                 file: fs.createReadStream(tempFilePath),
                 model: "whisper-large-v3",
@@ -72,7 +80,7 @@ export class GroqService {
     /**
      * Transcribe audio from base64 data URL
      */
-    static async transcribeFromDataURL(dataURL: string): Promise<TranscriptionResult> {
+    static async transcribeFromDataURL(dataURL: string, userApiKey?: string): Promise<TranscriptionResult> {
         try {
             // Extract base64 data and convert to buffer
             const base64Data = dataURL.split(',')[1];
@@ -88,7 +96,7 @@ export class GroqService {
                             mimeType.includes('mp4') ? 'mp4' : 
                             mimeType.includes('wav') ? 'wav' : 'webm';
 
-            return await this.transcribeAudio(audioBuffer, `audio.${extension}`);
+            return await this.transcribeAudio(audioBuffer, `audio.${extension}`, userApiKey);
 
         } catch (error) {
             console.error('❌ Error transcribing from data URL:', error);

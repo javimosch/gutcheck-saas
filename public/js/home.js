@@ -196,6 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Redirect to idea detail page
                 window.location.href = `/ideas/${result.idea._id}`;
             } else {
+                // Check if it's a Groq limit error
+                if (result.needsGroqKey) {
+                    window.gutcheckApp.showGroqKeyPrompt();
+                    return;
+                }
                 throw new Error(result.error || 'Analysis failed');
             }
 
