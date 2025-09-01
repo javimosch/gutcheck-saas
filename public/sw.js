@@ -2,65 +2,19 @@
 const CACHE_NAME = 'gutcheck-v1.0.0';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache on install
-const ASSETS_TO_CACHE = [
-  '/',
-  '/ideas',
-  '/register',
-  '/js/app.js',
-  '/js/home.js',
-  '/js/ideas.js',
-  '/js/idea-detail.js',
-  '/js/register.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
-];
-
-// Install event - cache assets
+// Install event
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching assets');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .then(() => {
-        console.log('Service Worker: Installation complete');
-        return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('Service Worker: Installation failed', error);
-      })
-  );
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event
 self.addEventListener('activate', (event) => {
   console.log('Service Worker: Activating...');
-  
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) {
-              console.log('Service Worker: Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        console.log('Service Worker: Activation complete');
-        return self.clients.claim();
-      })
-  );
+  self.clients.claim();
 });
 
-// Fetch event - serve cached content when offline
+// Fetch event
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -75,41 +29,20 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        // If request is successful, cache the response for future use
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-        }
-        return response;
-      })
       .catch(() => {
-        // Network request failed, try to serve from cache
-        return caches.match(event.request)
-          .then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            
-            // If no cache match and it's a navigation request, serve offline page
-            if (event.request.mode === 'navigate') {
-              return caches.match(OFFLINE_URL) || 
-                     new Response('Offline - Please check your connection', {
-                       status: 503,
-                       statusText: 'Service Unavailable',
-                       headers: { 'Content-Type': 'text/html' }
-                     });
-            }
-            
-            // For other requests, return a basic offline response
-            return new Response('Offline', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
+        // Network request failed, return error response
+        if (event.request.mode === 'navigate') {
+          return new Response('Network error - Please check your connection', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/html' }
           });
+        }
+        
+        return new Response('Network error', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       })
   );
 });
