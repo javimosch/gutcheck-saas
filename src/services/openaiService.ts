@@ -20,16 +20,51 @@ export class OpenAIService {
   private promptTemplate: string;
 
   constructor() {
-    this.promptTemplate = this.loadPromptTemplate();
+    this.promptTemplate = this.getEmbeddedPrompt();
   }
 
+  private getEmbeddedPrompt(): string {
+    // Embedded prompt template - no file dependency
+    return `You are a seasoned business advisor and startup mentor with expertise in evaluating SaaS ideas. Your task is to analyze the following business idea and provide a comprehensive "gut-check" evaluation.
+
+BUSINESS IDEA:
+{ideaText}
+
+Please analyze this idea and respond with a JSON object containing the following fields:
+
+{
+  "problem": "A clear, concise description of the problem this idea solves",
+  "audience": "The target audience or customer segment for this idea",
+  "competitors": ["List of 3-5 existing competitors or similar solutions"],
+  "potential": "Assessment of the market potential and business viability",
+  "score": 75, // Integer score from 0-100 based on overall potential
+  "recommendation": "pursue" // One of: "pursue", "maybe", "shelve"
+}
+
+EVALUATION CRITERIA:
+- Problem clarity and pain intensity (0-25 points)
+- Market size and addressability (0-25 points) 
+- Competitive landscape and differentiation (0-25 points)
+- Feasibility and execution complexity (0-25 points)
+
+RECOMMENDATIONS:
+- "pursue": Score 70+, strong problem-solution fit, clear path to market
+- "maybe": Score 40-69, has potential but needs refinement or validation
+- "shelve": Score <40, weak problem-solution fit or oversaturated market
+
+Be honest, direct, and constructive in your analysis. Focus on actionable insights that help the entrepreneur make informed decisions.
+
+Respond ONLY with valid JSON - no additional text or formatting.`;
+  }
+
+  // Keep the old loadPromptTemplate method for backward compatibility if needed
   private loadPromptTemplate(): string {
     try {
       const promptPath = join(__dirname, '../prompts/ideaPrompt.txt');
       return readFileSync(promptPath, 'utf-8');
     } catch (error) {
       console.error('Failed to load prompt template:', error);
-      return 'Analyze this business idea and provide a JSON response with problem, audience, competitors, potential, score, and recommendation fields.';
+      return this.getEmbeddedPrompt(); // Fallback to embedded prompt
     }
   }
 
